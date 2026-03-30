@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MINA DE ORO - ADS PROTECTION V34</title>
+    <style>
+        :root {
+            --neon-blue: #00d2ff; --neon-green: #00ff88; --neon-red: #ff3e3e;
+            --gold-metal: linear-gradient(to bottom, #fff6a5 0%, #ffcc00 50%, #cc9900 100%);
+            --bg-dark: #050b10; --panel-bg: #0a161f;
+        }
+
+        body {
+            font-family: 'Segoe UI', sans-serif; background: var(--bg-dark);
+            color: white; display: flex; flex-direction: column; align-items: center;
+            justify-content: center; min-height: 100vh; margin: 0; padding: 10px;
+            user-select: none; box-sizing: border-box; overflow-x: hidden;
+        }
+
+        .master-wrapper { width: 100%; max-width: 360px; display: flex; flex-direction: column; gap: 8px; }
+
+        .header-box {
+            display: flex; align-items: center; justify-content: center; gap: 10px;
+            width: 100%; border-bottom: 1px solid rgba(255, 215, 0, 0.3); padding-bottom: 8px;
+        }
+        .header-box h1 {
+            background: var(--gold-metal); -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            font-size: 1.6rem; font-weight: 900; text-transform: uppercase; font-style: italic; margin: 0;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5)); flex-grow: 1; text-align: center;
+        }
+        .btn-exit {
+            background: rgba(255, 62, 62, 0.1); border: 1px solid var(--neon-red);
+            color: var(--neon-red); padding: 4px 8px; border-radius: 4px;
+            font-weight: bold; font-size: 9px; cursor: pointer;
+            text-transform: uppercase; transition: 0.3s;
+            box-shadow: 0 0 5px rgba(255, 62, 62, 0.2); white-space: nowrap;
+        }
+        .btn-exit:hover { background: var(--neon-red); color: white; box-shadow: 0 0 15px var(--neon-red); }
+
+        .top-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; }
+        .stat-card { background: var(--panel-bg); border: 1px solid var(--neon-blue); padding: 5px; border-radius: 10px; text-align: center; }
+        .stat-label { font-size: 7px; color: #64748b; text-transform: uppercase; margin-bottom: 2px; }
+        .stat-val { font-size: 13px; font-weight: bold; display: flex; align-items: center; justify-content: center; gap: 3px; }
+
+        .reactor-panel { background: var(--panel-bg); border: 1px solid var(--neon-blue); padding: 8px; border-radius: 10px; }
+        .progress-container { height: 14px; background: #050b10; border-radius: 7px; border: 1px solid #1e293b; overflow: hidden; position: relative; }
+        .progress-fill { height: 100%; background: linear-gradient(90deg, #00bd65, var(--neon-blue)); width: 0%; transition: width 1s linear; }
+        #bolt-icon { position: absolute; right: 8px; font-size: 12px; color: rgba(0,210,255,0.2); top: 50%; transform: translateY(-50%); }
+
+        .grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; width: 100%; }
+        .tile { aspect-ratio: 1/1; background: #111d27; border: 1px solid #1e293b; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 22px; transition: 0.1s; position: relative; }
+        .tile.open { background: #050b10; border-color: #0d1a25; }
+
+        .control-box { background: var(--panel-bg); border: 1px solid #1e293b; padding: 10px; border-radius: 12px; }
+        .btn-group { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; margin-top: 4px; }
+        .sel-btn { background: #050b10; border: 1px solid #334151; color: #94a3b8; padding: 8px 5px; border-radius: 5px; cursor: pointer; font-size: 10px; font-weight: bold; transition: 0.2s; }
+        .sel-btn.active { border-color: var(--neon-blue); color: var(--neon-blue); background: rgba(0, 210, 255, 0.1); box-shadow: 0 0 10px rgba(0, 210, 255, 0.2); }
+
+        .btn-main { height: 60px; border: none; border-radius: 15px; font-weight: 900; font-size: 18px; cursor: pointer; transition: 0.2s; text-transform: uppercase; width: 100%; margin-top: 5px; }
+        .btn-start { background: var(--neon-green); color: #000; box-shadow: 0 0 15px rgba(0, 255, 136, 0.3); }
+        .btn-cashout { background: var(--neon-red); color: white; animation: pulse-btn 1s infinite; font-size: 20px; }
+        @keyframes pulse-btn { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.02); } }
+
+        .modal { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0); padding: 30px; border-radius: 25px; text-align: center; z-index: 1000; transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); width: 280px; }
+        .modal.active { transform: translate(-50%, -50%) scale(1); }
+        #win-modal { background: rgba(10, 22, 31, 0.98); border: 4px solid var(--neon-green); box-shadow: 0 0 40px var(--neon-green); }
+        
+        #ad-modal { background: #1a0505; border: 2px solid var(--neon-red); box-shadow: 0 0 50px rgba(255, 62, 62, 0.5); color: white; animation: pulse-modal 2s infinite; }
+        @keyframes pulse-modal { 0%, 100% { box-shadow: 0 0 20px var(--neon-red); } 50% { box-shadow: 0 0 50px var(--neon-red); } }
+        
+        .gold-metal-text { background: var(--gold-metal); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight: 900; text-transform: uppercase; filter: drop-shadow(0px 2px 2px rgba(0,0,0,0.8)); margin: 0; line-height: 1.1; }
+        
+        /* ESTILO AD-PROGRESS */
+        .btn-ad-watch { background: var(--gold-metal); color: black; border: none; padding: 12px; border-radius: 10px; font-weight: bold; width: 100%; margin-top: 15px; cursor: pointer; text-transform: uppercase; font-size: 14px; position: relative; overflow: hidden; }
+        .btn-ad-watch:disabled { background: #334151; color: #64748b; cursor: not-allowed; }
+        .ad-cooldown-bar { position: absolute; bottom: 0; left: 0; height: 4px; background: var(--neon-blue); width: 0%; transition: none; }
+
+        .coin-jump { position: absolute; width: 6px; height: 6px; background: #ffcc00; border-radius: 50%; animation: jump 0.6s forwards; z-index: 10; }
+        @keyframes jump { 0% { transform: translate(0,0); } 50% { transform: translate(var(--x), -25px); } 100% { transform: translate(var(--x), 10px); opacity: 0; } }
+    </style>
+</head>
+<body>
+
+    <div class="master-wrapper">
+        <div class="header-box">
+            <div style="font-size: 18px;">💰</div>
+            <h1>MINA DE ORO</h1>
+            <button class="btn-exit" onclick="window.location.href='index.html'">Salir</button>
+        </div>
+
+        <div class="top-row">
+            <div class="stat-card">
+                <div class="stat-label">Saldo QTS</div>
+                <div class="stat-val" style="color:var(--neon-green)">Q <span id="ui-bal">100.00</span></div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Energía</div>
+                <div class="stat-val" style="color:var(--neon-blue)">⚡ <span id="ui-energy">100</span></div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Ganado Hoy (Neto)</div>
+                <div class="stat-val" style="color:#ffcc00">Q <span id="ui-today">0.00</span></div>
+            </div>
+        </div>
+
+        <div class="reactor-panel">
+            <div style="display:flex; justify-content:space-between; font-size:8px; margin-bottom:3px; color:var(--neon-blue); font-weight:bold;">
+                <span>RECARGADOR DE NÚCLEO</span>
+                <span id="ui-timer">01:12</span>
+            </div>
+            <div class="progress-container">
+                <div class="progress-fill" id="energy-bar"></div>
+                <div id="bolt-icon">⚡</div>
+            </div>
+        </div>
+
+        <div class="grid" id="game-grid"></div>
+
+        <div class="control-box">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
+                <label style="font-size: 9px; color: var(--neon-blue); font-weight: bold;">RIESGO (BOMBAS)</label>
+                <div style="font-size: 9px; color:#ffcc00;">PRÓXIMA: Q <span id="ui-next">0.00</span></div>
+            </div>
+            <div class="btn-group" id="diff-group">
+                <button class="sel-btn" onclick="setDiff(1, this)">1</button>
+                <button class="sel-btn active" onclick="setDiff(3, this)">3</button>
+                <button class="sel-btn" onclick="setDiff(10, this)">10</button>
+                <button class="sel-btn" onclick="setDiff(20, this)">20</button>
+            </div>
+        </div>
+
+        <div class="control-box">
+            <label style="font-size: 9px; color: var(--neon-blue); font-weight: bold;">APUESTA (PUNTOS)</label>
+            <div class="btn-group" id="bet-group">
+                <button class="sel-btn" onclick="setBet(1, this)">1</button>
+                <button class="sel-btn active" onclick="setBet(10, this)">10</button>
+                <button class="sel-btn" onclick="setBet(50, this)">50</button>
+                <button class="sel-btn" onclick="setBet(100, this)">100</button>
+            </div>
+        </div>
+
+        <button id="action-btn" class="btn-main btn-start" onclick="handleAction()">INICIAR (10⚡)</button>
+    </div>
+
+    <div id="win-modal" class="modal">
+        <h2 class="gold-metal-text" style="font-size: 22px;">¡COBRADO!</h2>
+        <h1 id="win-total" class="gold-metal-text" style="font-size: 44px; margin-top: 10px;">0.00 QTS</h1>
+    </div>
+
+    <div id="ad-modal" class="modal">
+        <h2 style="color:white; margin:0; font-size: 24px;">AVISO</h2>
+        <h3 style="margin: 10px 0; color:var(--neon-red);">Te quedaste sin Energía</h3>
+        <button id="btn-ad-action" class="btn-ad-watch" onclick="watchAd()">
+            <span id="ad-btn-text">📺 RECARGAR (+50⚡)</span>
+            <div id="ad-cooldown-fill" class="ad-cooldown-bar"></div>
+        </button>
+        <div id="ad-limit-info" style="font-size: 9px; color: #64748b; margin-top: 10px;">Límite diario: 25 videos</div>
+        <button style="background:transparent; color:white; border:none; margin-top:15px; font-size:10px; cursor:pointer" onclick="closeModal('ad-modal')">CERRAR</button>
+    </div>
+
+<script>
+    // --- MOTOR DE AUDIO ---
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    let audioCtx = null;
+    function initAudio() { if(!audioCtx) audioCtx = new AudioCtx(); }
+
+    function playTone(freq, type, duration, volume, decay) {
+        if(!audioCtx) return;
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+        gain.gain.setValueAtTime(volume, audioCtx.currentTime);
+        if(decay) gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + duration);
+        osc.connect(gain); gain.connect(audioCtx.destination);
+        osc.start(); osc.stop(audioCtx.currentTime + duration);
+    }
+
+    const sfx = {
+        click: () => playTone(800, 'triangle', 0.1, 0.05, true),
+        start: () => { initAudio(); playTone(400, 'sine', 0.2, 0.1, true); setTimeout(() => playTone(600, 'sine', 0.3, 0.1, true), 100); },
+        coin: (count) => { const freq = 600 + (count * 100); playTone(freq, 'sine', 0.2, 0.15, true); setTimeout(() => playTone(freq * 1.5, 'triangle', 0.15, 0.05, true), 50); },
+        lose: () => { playTone(150, 'sawtooth', 0.5, 0.2, true); playTone(100, 'sine', 0.5, 0.2, true); },
+        cash: () => { [523.25, 659.25, 783.99, 1046.50].forEach((f, i) => { setTimeout(() => playTone(f, 'sine', 0.6, 0.08, true), i * 80); }); },
+        energyRegen: () => playTone(1200, 'sine', 0.05, 0.02, true),
+        energyFull: () => { [800, 1000, 1200, 1500].forEach((f, i) => setTimeout(() => playTone(f, 'sine', 0.4, 0.1, true), i * 60)); }
+    };
+
+    const GAME = {
+        bal: 100.0, bet: 10.0, active: false, mult: 1.0, mines: [], opened: 0, mCount: 3,
+        energy: 100, eCost: 10, regenStep: 0, regenTarget: 72, 
+        dailyProfit: 0, dailyLimit: 1111, godModeMax: 800,
+        // --- LOGICA ADS PROTECTED ---
+        adsToday: 0, adsThisHour: 0, adsMaxDay: 25, adsMaxHour: 7,
+        adCooldown: 0, adCooldownMax: 120 // 120 segundos = 2 minutos
+    };
+
+    function setDiff(v, btn) { if(GAME.active) return; sfx.click(); GAME.mCount = parseInt(v); document.querySelectorAll('#diff-group .sel-btn').forEach(b => b.classList.remove('active')); btn.classList.add('active'); updateUI(); }
+    function setBet(v, btn) { if(GAME.active) return; sfx.click(); GAME.bet = parseFloat(v); document.querySelectorAll('#bet-group .sel-btn').forEach(b => b.classList.remove('active')); btn.classList.add('active'); updateUI(); }
+
+    function start() {
+        initAudio();
+        if(GAME.energy < GAME.eCost) { document.getElementById('ad-modal').classList.add('active'); return; }
+        if(GAME.bal < GAME.bet) return alert("Puntos insuficientes");
+        GAME.mines = new Array(25).fill(0); 
+        let placed = 0; while(placed < GAME.mCount) { let r = Math.floor(Math.random()*25); if(GAME.mines[r] === 0) { GAME.mines[r] = 1; placed++; } }
+        GAME.opened = 0; GAME.mult = 1.0; GAME.active = true;
+        GAME.bal -= GAME.bet; GAME.dailyProfit -= GAME.bet; GAME.energy -= GAME.eCost;
+        sfx.start(); initGrid(); updateUI();
+    }
+
+    function reveal(i, el) {
+        if(!GAME.active || el.classList.contains('open')) return;
+        let isRealMine = GAME.mines[i] === 1;
+        let partidaGain = (GAME.bet * GAME.mult) - GAME.bet;
+        let totalGainSim = GAME.dailyProfit + partidaGain;
+        let isHardMode = (GAME.dailyProfit >= GAME.godModeMax) || (totalGainSim >= 900);
+        if (!isHardMode && isRealMine && GAME.opened < 7) {
+            let closedSlots = [];
+            for(let j=0; j<25; j++) {
+                const checkTile = document.getElementById('tile-'+j);
+                if(GAME.mines[j] === 0 && j !== i && checkTile && !checkTile.classList.contains('open')) closedSlots.push(j);
+            }
+            if(closedSlots.length > 0) { GAME.mines[i] = 0; GAME.mines[closedSlots[Math.floor(Math.random()*closedSlots.length)]] = 1; isRealMine = false; }
+        } else if (isHardMode) {
+            if (GAME.opened >= 2 && Math.random() < 0.85) isRealMine = true;
+            if (totalGainSim >= 1050) isRealMine = true; 
+        }
+        el.classList.add('open');
+        if (isRealMine) { el.innerHTML = '💣'; sfx.lose(); end(); }
+        else { el.innerHTML = '💰'; createJumpCoins(el); sfx.coin(GAME.opened); GAME.opened++; applyBalancedMult(); updateUI(); }
+    }
+
+    function applyBalancedMult() {
+        let isHard = (GAME.dailyProfit >= GAME.godModeMax);
+        let boost = isHard ? 0.85 : 1.08;
+        GAME.mult *= ( (25 - (GAME.opened - 1)) / (25 - (GAME.opened - 1) - GAME.mCount) ) * boost;
+    }
+
+    function cashout() {
+        const total = GAME.bet * GAME.mult;
+        GAME.bal += total; GAME.dailyProfit += total;
+        sfx.cash();
+        document.getElementById('win-total').innerText = total.toFixed(2) + " QTS";
+        document.getElementById('win-modal').classList.add('active');
+        setTimeout(() => document.getElementById('win-modal').classList.remove('active'), 2000); 
+        end();
+    }
+
+    function end() { GAME.active = false; document.querySelectorAll('.tile').forEach((t, i) => { if(!t.classList.contains('open')) { t.innerHTML = GAME.mines[i] === 1 ? '💣' : '💰'; t.style.opacity = "0.3"; } }); updateUI(); }
+
+    function updateUI() {
+        document.getElementById('ui-bal').innerText = GAME.bal.toFixed(2);
+        document.getElementById('ui-energy').innerText = GAME.energy;
+        document.getElementById('ui-today').innerText = GAME.dailyProfit.toFixed(2);
+        if(GAME.active) {
+            let isHard = (GAME.dailyProfit >= GAME.godModeMax);
+            let boost = isHard ? 0.85 : 1.08;
+            const nextProb = (25 - GAME.opened - GAME.mCount) / (25 - GAME.opened);
+            const nextVal = (GAME.bet * GAME.mult * (1 / nextProb) * boost);
+            document.getElementById('ui-next').innerText = nextVal.toFixed(2);
+        } else { document.getElementById('ui-next').innerText = "0.00"; }
+        const btn = document.getElementById('action-btn');
+        if(GAME.active) { btn.className = "btn-main btn-cashout"; btn.innerText = `COBRAR ${(GAME.bet * GAME.mult).toFixed(2)}`; }
+        else { btn.className = "btn-main btn-start"; btn.innerText = `INICIAR (10⚡)`; }
+        
+        // Actualizar UI de Anuncios
+        const adBtn = document.getElementById('btn-ad-action');
+        const adText = document.getElementById('ad-btn-text');
+        const adLimitInfo = document.getElementById('ad-limit-info');
+        adLimitInfo.innerText = `Límite: ${GAME.adsToday}/${GAME.adsMaxDay} hoy | ${GAME.adsThisHour}/${GAME.adsMaxHour} esta hora`;
+        
+        if (GAME.adCooldown > 0) {
+            adBtn.disabled = true;
+            adText.innerText = `⏳ ESPERA (${GAME.adCooldown}s)`;
+            document.getElementById('ad-cooldown-fill').style.width = ((GAME.adCooldown / GAME.adCooldownMax) * 100) + "%";
+        } else if (GAME.adsToday >= GAME.adsMaxDay || GAME.adsThisHour >= GAME.adsMaxHour) {
+            adBtn.disabled = true;
+            adText.innerText = "🚫 LÍMITE ALCANZADO";
+            document.getElementById('ad-cooldown-fill').style.width = "0%";
+        } else {
+            adBtn.disabled = false;
+            adText.innerText = "📺 RECARGAR (+50⚡)";
+            document.getElementById('ad-cooldown-fill').style.width = "0%";
+        }
+    }
+
+    function runSystem() {
+        // Regeneración de energía
+        if(GAME.energy < 100) {
+            GAME.regenStep++; document.getElementById('energy-bar').style.width = (GAME.regenStep / GAME.regenTarget * 100) + "%";
+            if(GAME.regenStep >= GAME.regenTarget) { GAME.energy++; GAME.regenStep = 0; sfx.energyRegen(); updateUI(); }
+            document.getElementById('ui-timer').innerText = `00:${(GAME.regenTarget - GAME.regenStep).toString().padStart(2,'0')}`;
+        }
+        // Cronómetro de Anuncios
+        if(GAME.adCooldown > 0) { GAME.adCooldown--; updateUI(); }
+    }
+
+    function watchAd() { 
+        if (GAME.adCooldown > 0 || GAME.adsToday >= GAME.adsMaxDay || GAME.adsThisHour >= GAME.adsMaxHour) return;
+        
+        initAudio();
+        // Simulación de anuncio recompensa
+        alert("Simulando Anuncio... (Aquí irá tu código de AdMob/Unity)");
+        
+        sfx.energyFull();
+        GAME.energy = Math.min(100, GAME.energy + 50); 
+        GAME.adsToday++;
+        GAME.adsThisHour++;
+        GAME.adCooldown = GAME.adCooldownMax; // Activar cronómetro de 2 min
+        closeModal('ad-modal'); 
+        updateUI(); 
+    }
+
+    // Reset de anuncios por hora (cada 3600 segundos)
+    setInterval(() => { GAME.adsThisHour = 0; updateUI(); }, 3600000);
+
+    function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+    function initGrid() {
+        const g = document.getElementById('game-grid'); g.innerHTML = '';
+        for(let i=0; i<25; i++) {
+            const t = document.createElement('div'); t.className = 'tile'; t.id = 'tile-'+i; t.innerHTML = '🔹';
+            t.onclick = () => reveal(i, t); g.appendChild(t);
+        }
+    }
+    function createJumpCoins(parent) { for(let i=0; i<6; i++) { const c = document.createElement('div'); c.className = 'coin-jump'; c.style.setProperty('--x', (Math.random() * 40 - 20) + 'px'); parent.appendChild(c); setTimeout(() => c.remove(), 600); } }
+    function handleAction() { if(!GAME.active) start(); else { sfx.click(); cashout(); } }
+
+    setInterval(runSystem, 1000); initGrid(); updateUI();
+</script>
+</body>
+</html>

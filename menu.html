@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FORTUNEX SUPREME HUB</title>
+    <style>
+        :root { --bg: #050b10; --gold: #ffcc00; --p1: #00d2ff; }
+        body { background: var(--bg); color: white; font-family: 'Segoe UI', sans-serif; margin: 0; padding: 20px; text-align: center; }
+        
+        .grid-juegos {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            max-width: 800px;
+            margin: 20px auto;
+        }
+
+        .card-juego {
+            background: #0a161f;
+            border: 2px solid #1e293b;
+            border-radius: 20px;
+            padding: 15px;
+            cursor: pointer;
+            transition: 0.3s;
+            text-decoration: none;
+            color: white;
+        }
+
+        .card-juego:hover {
+            border-color: var(--p1);
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,210,255,0.2);
+        }
+
+        .icono { font-size: 40px; margin-bottom: 10px; display: block; }
+        .titulo { font-weight: 900; text-transform: uppercase; font-size: 12px; }
+        .tag-online { font-size: 8px; background: var(--p1); color: black; padding: 2px 5px; border-radius: 5px; margin-top: 5px; display: inline-block; }
+    </style>
+</head>
+<body>
+
+    <h1 style="color:var(--gold); font-style: italic;">FORTUNEX HUB</h1>
+    <p style="font-size: 12px; opacity: 0.7;">¡MÁS DE 20 JUEGOS ONLINE DISPONIBLES!</p>
+
+    <div class="grid-juegos">
+        <a href="juegos/galletita.html" class="card-juego">
+            <span class="icono">🍪</span>
+            <span class="titulo">La Galletita</span>
+            <span class="tag-online">ONLINE</span>
+        </a>
+
+        <a href="juegos/damas.html" class="card-juego">
+            <span class="icono">🏁</span>
+            <span class="titulo">Damas Pro</span>
+            <span class="tag-online">ONLINE</span>
+        </a>
+
+        <a href="juegos/mina.html" class="card-juego">
+            <span class="icono">💰</span>
+            <span class="titulo">Mina de Oro</span>
+        </a>
+
+        </div>
+
+    <script>
+        // Aquí controlarás las estrellas de TODOS los juegos
+        function checkEstrellas() {
+            let stars = localStorage.getItem('fortunex_stars') || 50;
+            console.log("Usuario tiene: " + stars + " estrellas para todos los juegos");
+        }
+        checkEstrellas();
+    </script>
+</body>
+</html>

@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>FORTUNEX HUB - V18 DOPAMINE FIXED</title>
+    <style>
+        :root {
+            --neon-blue: #00d2ff; --neon-green: #00ff88; --neon-purple: #bc13fe; 
+            --neon-red: #ff3e3e; --neon-yellow: #ffcc00; --neon-pink: #ff0055;
+            --gold-metal: linear-gradient(to bottom, #fff6a5 0%, #ffcc00 50%, #cc9900 100%);
+            --bg-dark: #050b10; --panel-bg: #0a161f;
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, sans-serif; background: var(--bg-dark);
+            color: white; margin: 0; padding: 0; display: flex; flex-direction: column;
+            align-items: center; min-height: 100vh; overflow-x: hidden;
+        }
+
+        .main-container { width: 100%; max-width: 900px; padding: 10px; box-sizing: border-box; padding-bottom: 130px; }
+
+        /* =========================================
+           1. HUD SUPERIOR
+           ========================================= */
+        .hud-header {
+            background: rgba(188, 19, 254, 0.05); border: 1px solid rgba(188, 19, 254, 0.2);
+            border-radius: 15px; padding: 12px; margin-bottom: 12px; backdrop-filter: blur(10px);
+            box-shadow: 0 0 20px rgba(188, 19, 254, 0.1);
+        }
+        
+        .header-top-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .logo-text { font-size: 15px; font-weight: 900; color: var(--neon-blue); text-shadow: 0 0 10px var(--neon-blue); }
+        .global-actions { display: flex; gap: 12px; align-items: center; }
+        
+        .btn-congelar-top {
+            background: rgba(0, 210, 255, 0.1); border: 1px solid var(--neon-blue);
+            color: var(--neon-blue); padding: 5px 10px; border-radius: 6px;
+            font-size: 9px; font-weight: 900; cursor: pointer; text-transform: uppercase;
+            animation: ice-pulse 2.5s infinite;
+        }
+        @keyframes ice-pulse { 0%, 100% { box-shadow: 0 0 2px var(--neon-blue); } 50% { box-shadow: 0 0 15px var(--neon-blue); transform: scale(1.02); } }
+
+        .icon-btn { cursor: pointer; font-size: 18px; transition: 0.2s; }
+
+        .hud-bot-row { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+        .profile-group { display: flex; align-items: center; gap: 10px; flex-shrink: 1; }
+        .avatar-circle { 
+            width: 40px; height: 40px; background: var(--panel-bg); border: 2px solid var(--neon-purple); 
+            border-radius: 50%; display: flex; align-items: center; justify-content: center; 
+            font-size: 22px; box-shadow: 0 0 15px rgba(188, 19, 254, 0.3); cursor: pointer;
+        }
+        .username { font-size: 14px; font-weight: 900; display: flex; align-items: center; gap: 6px; white-space: nowrap; }
+
+        .wallet-group { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+        .balance-box { 
+            background: rgba(0, 255, 136, 0.05); border: 1px solid var(--neon-green); 
+            padding: 6px 12px; border-radius: 8px; color: var(--neon-green); 
+            font-weight: 900; font-size: 13px; display: flex; align-items: center; gap: 4px;
+        }
+        .btn-retirar {
+            background: var(--neon-red); border: none; color: white;
+            padding: 8px 12px; border-radius: 8px; font-size: 10px; font-weight: 900;
+            cursor: pointer; animation: pulse-red 1.5s infinite;
+        }
+        @keyframes pulse-red { 0%, 100% { box-shadow: 0 0 5px var(--neon-red); } 50% { transform: scale(1.05); box-shadow: 0 0 20px var(--neon-red); } }
+
+        /* =========================================
+           2. RECURSOS
+           ========================================= */
+        .resources-bar { display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px; margin-bottom: 20px; }
+        .res-cell { 
+            background: rgba(10, 22, 31, 0.8); border: 1px solid #1e293b; border-radius: 10px; 
+            padding: 10px 0; display: flex; flex-direction: column; align-items: center; gap: 4px;
+            transition: 0.3s;
+        }
+        .res-cell span:first-child { animation: float-icon 3s ease-in-out infinite; display: inline-block; }
+        @keyframes float-icon { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-3px); filter: brightness(1.2); } }
+
+        /* =========================================
+           3. JUEGOS
+           ========================================= */
+        .game-card {
+            background: linear-gradient(135deg, #0a161f 0%, #111d27 100%);
+            border: 1px solid #1e293b; border-radius: 20px;
+            display: flex; align-items: center; padding: 12px;
+            text-decoration: none; color: white; transition: 0.3s;
+            position: relative; overflow: hidden; margin-bottom: 10px;
+        }
+        .game-card::after {
+            content: ''; position: absolute; top: -50%; left: -60%; width: 25%; height: 200%;
+            background: rgba(255, 255, 255, 0.08); transform: rotate(30deg);
+            animation: shimmer 5s infinite;
+        }
+        @keyframes shimmer { 0% { left: -60%; } 15% { left: 120%; } 100% { left: 120%; } }
+        .game-card:hover { border-color: var(--neon-blue); transform: scale(1.02); }
+        
+        .game-thumb { width: 65px; height: 65px; border-radius: 14px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 28px; background: #050b10; border: 2px solid #1e293b; transition: 0.3s; }
+        
+        .game-content { flex-grow: 1; padding-left: 12px; }
+        .game-name { font-size: 15px; font-weight: 900; margin: 0; }
+        .cost-badge { font-size: 9px; font-weight: bold; margin-top: 4px; padding: 3px 6px; border-radius: 4px; background: rgba(255,255,255,0.05); display: inline-block; }
+
+        /* =========================================
+           4. NAV INFERIOR
+           ========================================= */
+        .bottom-nav { 
+            position: fixed; bottom: 0; width: 100%; max-width: 500px; 
+            background: rgba(5, 11, 16, 0.98); display: grid; grid-template-columns: repeat(7, 1fr); 
+            padding: 12px 0; border-top: 1px solid #1e293b; z-index: 2000; border-radius: 20px 20px 0 0;
+            backdrop-filter: blur(10px);
+        }
+        .nav-link { display: flex; flex-direction: column; align-items: center; gap: 2px; font-size: 6.5px; color: #475569; text-decoration: none; font-weight: 900; text-transform: uppercase; }
+        .nav-link.active { color: var(--neon-blue); text-shadow: 0 0 10px var(--neon-blue); }
+        
+        .btn-activador-main { 
+            background: var(--neon-blue); color: black !important; 
+            border-radius: 12px; margin: -15px 2px 5px 2px; padding: 10px 0; 
+            box-shadow: 0 5px 15px rgba(0, 210, 255, 0.4);
+            animation: breathe 3s infinite;
+        }
+        @keyframes breathe { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.04); } }
+    </style>
+</head>
+<body onclick="initAudio()">
+
+    <div class="main-container">
+        <div class="hud-header">
+            <div class="header-top-row">
+                <div class="logo-section">
+                    <span class="logo-text">FORTUNEX <small style="opacity:0.4;">HUB</small></span>
+                </div>
+                <div class="global-actions">
+                    <button class="btn-congelar-top" onclick="playSfx('click')">❄️ CONGELAR</button>
+                    <span class="icon-btn" style="color:var(--neon-yellow)" onclick="window.location.href='ranking.html'">🏆</span>
+                    <span class="icon-btn" style="color:var(--neon-pink)" onclick="window.location.href='soporte.html'">🎧</span>
+                    <span class="icon-btn" onclick="playSfx('click')">🔔</span>
+                </div>
+            </div>
+            
+            <div class="hud-bot-row">
+                <div class="profile-group">
+                    <div class="avatar-circle" onclick="playSfx('click'); window.location.href='configuracion.html'">👤</div>
+                    <div class="user-text-info">
+                        <div class="username">@ARTURO <span style="color:var(--neon-yellow); cursor:pointer" onclick="playSfx('click')">💬</span></div>
+                        <div style="font-size: 8px; color: var(--neon-purple); text-transform: uppercase;">NIVEL 05 RECLUTA</div>
+                    </div>
+                </div>
+
+                <div class="wallet-group">
+                    <div class="balance-box">
+                        <span style="color:var(--neon-green)">Q</span>
+                        <span>0.00</span>
+                    </div>
+                    <button class="btn-retirar" onclick="playSfx('cash')">RETIRAR</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="resources-bar">
+            <div class="res-cell" onmouseenter="playSfx('hover')"><span>💎</span><span>10</span></div>
+            <div class="res-cell" onmouseenter="playSfx('hover')"><span>⚡</span><span>50</span></div>
+            <div class="res-cell" onmouseenter="playSfx('hover')"><span>⭐</span><span>1.2k</span></div>
+            <div class="res-cell" onmouseenter="playSfx('hover')"><span>🔑</span><span>03</span></div>
+            <div class="res-cell" onmouseenter="playSfx('hover')"><span>🧈</span><span>12</span></div>
+        </div>
+
+        <div class="games-list">
+            <a href="mina.html" class="game-card" onmouseenter="playSfx('hover')" onclick="playSfx('click')" style="border-left: 4px solid var(--neon-yellow);">
+                <div class="game-thumb" style="background: url('mina_portada.png') center/cover; border-color: var(--neon-yellow);">💰</div>
+                <div class="game-content">
+                    <h3 class="game-name" style="background: var(--gold-metal); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">MINA DE ORO</h3>
+                    <span class="cost-badge" style="color: var(--neon-blue);">REQUERIDO: 10 ⚡</span>
+                </div>
+                <div style="color: var(--neon-blue); font-size: 20px;">▶</div>
+            </a>
+            <a href="" class="game-card" onmouseenter="playSfx('hover')" onclick="playSfx('click')">
+                <div class="game-thumb">🏁</div>
+                <div class="game-content"><h3 class="game-name">Damas Online</h3><span class="cost-badge" style="color: var(--neon-purple);">COSTO: 2 💎</span></div>
+            </a>
+            <a href="galleta.html" class="game-card" onmouseenter="playSfx('hover')" onclick="playSfx('click')">
+                <div class="game-thumb">🍱</div>
+                <div class="game-content"><h3 class="game-name">La Galletita</h3><span class="cost-badge" style="color: #94a3b8;">COSTO: 1 🔑</span></div>
+            </a>
+            <a href="#" class="game-card" onmouseenter="playSfx('hover')" onclick="playSfx('click')">
+                <div class="game-thumb">❌</div>
+                <div class="game-content"><h3 class="game-name">3 en Raya</h3><span class="cost-badge" style="color: var(--neon-yellow);">COSTO: 50 ⭐</span></div>
+            </a>
+            <a href="#" class="game-card" onmouseenter="playSfx('hover')" onclick="playSfx('click')">
+                <div class="game-thumb">🎰</div>
+                <div class="game-content"><h3 class="game-name">Chanton Chanton</h3><span class="cost-badge" style="color: #f59e0b;">COSTO: 1 🧈</span></div>
+            </a>
+            <a href="#" class="game-card" onmouseenter="playSfx('hover')" onclick="playSfx('click')">
+                <div class="game-thumb">🃏</div>
+                <div class="game-content"><h3 class="game-name">Adivina la Carta</h3><span class="cost-badge" style="color: var(--neon-green);">COSTO: 0.50 QTS</span></div>
+            </a>
+        </div>
+    </div>
+
+    <nav class="bottom-nav">
+        <a href="#" class="nav-link active"><span>🏠</span><span>INICIO</span></a>
+        <a href="referidos.html" class="nav-link" onclick="playSfx('click')"><span>👥+</span><span>REFERIDO</span></a>
+        <a href="amigos.html" class="nav-link" onclick="playSfx('click')"><span>🤝</span><span>AMIGOS</span></a>
+        <a href="activador.html" class="nav-link btn-activador-main" onclick="playSfx('click')"><span>⚡</span><span>ACTIVADOR</span></a>
+        <a href="canje.html" class="nav-link" onclick="playSfx('click')"><span>🎁</span><span>CANJE</span></a>
+        <a href="tienda.html" class="nav-link" onclick="playSfx('click')"><span>🛒</span><span>TIENDA</span></a>
+        <a href="personalizar.html" class="nav-link" onclick="playSfx('click')"><span>🎨</span><span>DISEÑO</span></a>
+    </nav>
+
+    <script>
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        let ctx = null;
+
+        function initAudio() {
+            if (!ctx) {
+                ctx = new AudioCtx();
+            }
+            if (ctx.state === 'suspended') {
+                ctx.resume();
+            }
+        }
+
+        function playTone(freq, type, dur, vol) {
+            initAudio();
+            if(!ctx) return;
+            
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            
+            osc.type = type;
+            osc.frequency.setValueAtTime(freq, ctx.currentTime);
+            
+            gain.gain.setValueAtTime(vol, ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + dur);
+            
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            
+            osc.start();
+            osc.stop(ctx.currentTime + dur);
+        }
+
+        const sfx = {
+            hover: () => {
+                playTone(1200, 'sine', 0.1, 0.02);
+                setTimeout(() => playTone(1800, 'triangle', 0.05, 0.01), 20);
+            },
+            click: () => {
+                playTone(600, 'sine', 0.1, 0.1);
+                setTimeout(() => playTone(900, 'sine', 0.1, 0.05), 50);
+            },
+            cash: () => {
+                const notes = [523, 659, 783, 1046];
+                notes.forEach((f, i) => {
+                    setTimeout(() => playTone(f, 'sine', 0.4, 0.05), i * 80);
+                });
+            }
+        };
+
+        function playSfx(type) { sfx[type](); }
+    </script>
+</body>
+</html>
