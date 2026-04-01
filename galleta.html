@@ -2,309 +2,149 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GALLETITA V63 - SUPREME ELITE</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cyber-Chat Fixed</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         :root {
-            --bg: #050b10; --panel: #0a161f;
-            --p1: #00d2ff; --p2: #ff0055; --p3: #00ff88; --p4: #ffcc00; --gold: #ffcc00;
+            --wa-green: #25D366; --wa-dark: #0b141a; --neon-blue: #00f3ff;
+            --neon-gold: #ffcc00; --sent: #005c4b; --recv: #202c33;
         }
-        * { box-sizing: border-box; touch-action: manipulation; outline: none; }
-        body { 
-            background: var(--bg); color: white; font-family: 'Segoe UI', sans-serif; margin: 0;
-            display: flex; flex-direction: column; align-items: center; 
-            height: 100vh; width: 100vw; overflow: hidden; padding: 5px;
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: sans-serif; }
+        body { background: #000; color: white; height: 100vh; overflow: hidden; }
+
+        /* Selector Principal */
+        #selector { 
+            position: fixed; inset: 0; background: #000; z-index: 9999; 
+            display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px;
         }
+        
+        .btn { 
+            padding: 20px; width: 80%; max-width: 300px; border-radius: 12px; border: none; 
+            font-weight: bold; cursor: pointer; text-transform: uppercase;
+            background: var(--wa-green); color: #000; box-shadow: 0 4px 0 #128c7e;
+        }
+        .btn:active { transform: translateY(2px); box-shadow: none; }
 
-        .app-container { width: 100%; max-width: 480px; display: flex; flex-direction: column; height: 100%; align-items: center; position: relative; }
+        .container { width: 100%; max-width: 450px; height: 100vh; margin: auto; display: flex; flex-direction: column; position: relative; }
+        header { background: #111b21; padding: 15px; border-bottom: 1px solid var(--neon-blue); display: flex; justify-content: space-between; }
 
-        /* HUD SUPERIOR */
-        .gold-hud { width: 100%; border-bottom: 2px solid var(--gold); padding: 5px; flex-shrink: 0; }
-        .hud-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
-        .hud-title { color: var(--gold); font-weight: 900; font-size: 18px; text-transform: uppercase; font-style: italic; }
-        .stats-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 5px; }
-        .stat-box { background: var(--panel); border: 1px solid #1e293b; border-radius: 10px; padding: 5px; text-align: center; }
-        .stat-label { font-size: 7px; color: var(--p1); font-weight: 900; display: block; }
-        .stat-val { font-weight: 900; font-size: 12px; color: var(--p3); }
-        .recharge-bg { width: 100%; height: 8px; background: #000; border-radius: 4px; margin-top: 5px; overflow: hidden; border: 1px solid #1e293b; }
-        .recharge-fill { height: 100%; background: linear-gradient(90deg, var(--p1), var(--p3)); width: 0%; }
+        /* Chat y Mensajes */
+        .page { position: absolute; inset: 0; background: var(--wa-dark); display: none; flex-direction: column; z-index: 100; }
+        #chat-flow { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 10px; }
+        .bubble { max-width: 80%; padding: 10px; border-radius: 10px; font-size: 14px; }
+        .s { align-self: flex-end; background: var(--sent); }
+        .r { align-self: flex-start; background: var(--recv); }
+        .t { font-size: 9px; color: var(--neon-blue); display: block; margin-top: 5px; text-align: right; }
 
-        #room-tag { color: var(--p1); font-weight: 900; font-size: 10px; margin-top: 5px; background: rgba(0,210,255,0.1); padding: 2px 12px; border-radius: 20px; display: none; border: 1px solid var(--p1); text-transform: uppercase; }
-
-        /* NAVEGACIÓN PRINCIPAL */
-        .mode-nav { display: flex; gap: 4px; width: 100%; margin: 8px 0; flex-shrink: 0; }
-        .btn-nav { flex: 1; padding: 12px; border-radius: 10px; border: 1px solid #1e293b; background: var(--panel); color: white; font-size: 9px; font-weight: 900; cursor: pointer; text-transform: uppercase; transition: 0.3s; }
-        .btn-nav.active { border-color: var(--p1); box-shadow: 0 0 10px var(--p1); color: var(--p1); }
-
-        /* ARENA */
-        #arena { flex-grow: 1; width: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 10px; position: relative; }
-        .p-row { width: 100%; display: flex; justify-content: space-between; padding: 0 10px; }
-        .corner { width: 85px; text-align: center; opacity: 0.15; transition: 0.4s; position: relative; filter: grayscale(1); }
-        .corner.active { opacity: 1; filter: grayscale(0); transform: scale(1.15); }
-        .avatar { width: 45px; height: 45px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.2); margin: 0 auto 3px; display: flex; align-items: center; justify-content: center; background: #000; font-size: 22px; transition: 0.4s; }
-        .corner.active .avatar { border-color: white; box-shadow: 0 0 15px currentColor; animation: pulse 0.8s infinite alternate; }
-        @keyframes pulse { from { transform: scale(1); } to { transform: scale(1.1); } }
-        .status-tag { font-size: 7px; font-weight: 900; text-transform: uppercase; color: var(--p3); position: absolute; bottom: -12px; width: 100%; left: 0; }
-
-        /* TABLERO */
-        #board { display: grid; padding: 10px; background: #070e14; border-radius: 20px; border: 2px solid #1e293b; box-shadow: 0 0 40px rgba(0,0,0,0.8); transition: 0.5s; margin: auto; }
-        #board.locked { opacity: 0.6; pointer-events: none !important; filter: brightness(0.7); }
-        .dot { width: 5px; height: 5px; background: #fff; border-radius: 50%; }
-        .line { background: #1e293b; transition: 0.2s; cursor: pointer; border-radius: 3px; }
-        .line.taken { background: currentColor; box-shadow: 0 0 10px currentColor; pointer-events: none; }
-        .box { display: flex; align-items: center; justify-content: center; font-weight: 900; transition: 0.5s; transform: scale(0); color: white; text-shadow: 0 0 5px black; border-radius: 4px; font-size: 16px; }
-
-        /* MODALES */
-        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.97); display: none; align-items: center; justify-content: center; z-index: 99999; backdrop-filter: blur(10px); }
-        .modal-content { background: var(--panel); padding: 25px; border-radius: 25px; border: 2px solid var(--p1); text-align: center; width: 92%; max-width: 400px; animation: pop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); position: relative; }
-        @keyframes pop { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-        .close-x { position: absolute; top: 10px; right: 15px; font-size: 24px; color: var(--p2); cursor: pointer; font-weight: 900; }
-
-        .btn-main-action { width: 100%; padding: 18px; border-radius: 15px; border: none; font-weight: 900; cursor: pointer; background: linear-gradient(135deg, var(--p3), #00cc6a); color: black; box-shadow: 0 0 20px var(--p3); text-transform: uppercase; margin-top: 10px; font-size: 14px; }
-        .btn-surrender { width: 100%; max-width: 450px; padding: 14px; border-radius: 12px; border: 2px solid var(--p2); background: transparent; color: var(--p2); font-weight: 900; cursor: pointer; display: none; margin-top: 5px; }
-
-        input, select { background: #000; border: 1px solid #1e293b; color: #fff; padding: 14px; border-radius: 12px; width: 100%; margin: 8px 0; text-align: center; font-weight: 900; }
-        .share-instr { font-size: 11px; color: #888; margin-top: 15px; font-weight: bold; }
+        .input-row { padding: 10px; background: #111b21; display: flex; gap: 10px; }
+        input { flex: 1; padding: 12px; border-radius: 20px; border: none; background: #2a3942; color: white; outline: none; }
     </style>
 </head>
-<body onload="initApp()">
+<body>
 
-    <div class="app-container">
-        <div class="gold-hud">
-            <div class="hud-row">
-                <div class="hud-title">💰 GALLETITA</div>
-                <button class="stat-box" style="border-color:var(--p2); color:var(--p2); cursor:pointer;" onclick="location.reload()">SALIR</button>
-            </div>
-            <div class="stats-grid">
-                <div class="stat-box"><span class="stat-label">SALDO QTS</span><span id="h-bal">Q 100.00</span></div>
-                <div class="stat-box"><span class="stat-label">ESTRELLAS</span><span id="h-star">⭐ 50</span></div>
-                <div class="stat-box"><span class="stat-label">PREMIO</span><span id="h-prz">Q 0.00</span></div>
-            </div>
-            <div class="recharge-bg"><div id="h-bar" class="recharge-fill"></div></div>
-        </div>
+<div id="selector">
+    <h1 style="color:var(--neon-blue); margin-bottom:20px;">CYBER-LINK</h1>
+    <button class="btn" onclick="startApp('User_A')">USUARIO A</button>
+    <button class="btn" onclick="startApp('User_B')">USUARIO B</button>
+</div>
 
-        <div class="mode-nav" id="mode-ui">
-            <button onclick="openSetup('ia')" class="btn-nav" id="n-ia">VS IA</button>
-            <button onclick="openSetup('local')" class="btn-nav" id="n-local">LOCAL</button>
-            <button onclick="openSetup('online')" class="btn-nav" id="n-online">ONLINE</button>
-        </div>
+<div class="container">
+    <header>
+        <span id="display-id" style="color:var(--neon-blue)">ID: ---</span>
+        <span style="color:var(--neon-gold)">⭐ 850</span>
+    </header>
 
-        <div id="room-tag">MESA: <span id="room-id-txt">----</span></div>
-
-        <div id="arena">
-            <div id="host-start-ui" style="display:none; position:absolute; z-index:1000; width:85%; background:rgba(10,22,31,0.95); padding:20px; border-radius:20px; border:1px solid var(--p1);">
-                <button class="btn-main-action" style="background:var(--p1);" onclick="hostBegin()">INICIAR PARTIDA</button>
-            </div>
-
-            <div class="p-row">
-                <div id="p1-corner" class="corner" style="color:var(--p1)"><div class="avatar">👤</div><div id="n1">J1</div><div class="status-tag" id="s1">ESPERANDO AMIGO</div></div>
-                <div id="p2-corner" class="corner" style="color:var(--p2)"><div id="n2">J2</div><div class="avatar">👤</div><div class="status-tag" id="s2">ESPERANDO AMIGO</div></div>
-            </div>
-            
-            <div id="board"></div>
-
-            <div class="p-row">
-                <div id="p3-corner" class="corner" style="color:var(--p3)"><div class="avatar">👤</div><div id="n3">J3</div><div class="status-tag" id="s3">ESPERANDO AMIGO</div></div>
-                <div id="p4-corner" class="corner" style="color:var(--p4)"><div id="n4">J4</div><div class="avatar">👤</div><div class="status-tag" id="s4">ESPERANDO AMIGO</div></div>
-            </div>
-        </div>
-
-        <button class="btn-surrender" id="btn-surr" onclick="showM('modal-surr')">RENDIRSE</button>
-    </div>
-
-    <div id="modal-setup" class="modal">
-        <div class="modal-content">
-            <span class="close-x" onclick="closeM('modal-setup')">×</span>
-            <h2 id="st-title" style="color:var(--p1)">SETUP JUEGO</h2>
-            <div id="on-fields" style="display:none;">
-                <div style="display:flex; gap:5px; margin-bottom:10px; background:#000; padding:4px; border-radius:12px;">
-                    <button id="t-host" class="btn-nav active" style="flex:1" onclick="setR('host')">CREAR MESA</button>
-                    <button id="t-guest" class="btn-nav" style="flex:1" onclick="setR('guest')">UNIRSE</button>
-                </div>
-                <input type="number" id="room-id" placeholder="CÓDIGO" oninput="valC()">
-                <select id="bet-s"><option value="10">Apuesta Q 10.00</option><option value="50">Apuesta Q 50.00</option></select>
-                <div id="share-box" style="display:none; flex-direction:column;">
-                    <p class="share-instr">Copia o comparte tu código vía WhatsApp</p>
-                    <div style="display:flex; gap:8px; margin-top:5px;">
-                        <button class="btn-nav" style="background:#25D366; color:white; flex:1;" onclick="shWA()">WhatsApp</button>
-                        <button class="btn-nav" style="background:var(--p1); color:white; flex:1;" onclick="cpC()">Copiar Código</button>
-                    </div>
-                </div>
-            </div>
-            <div id="local-fields" style="display:none;">
-                <select id="p-count"><option value="2">2 Jugadores</option><option value="4">4 Jugadores</option></select>
-            </div>
-            <input type="text" id="nick-s" placeholder="TU APODO">
-            <select id="grid-s"><option value="4">4x4 Rápido</option><option value="6" selected>6x6 Pro</option></select>
-            <button class="btn-main-action" id="btn-pay" onclick="pay()">CONTINUAR</button>
+    <div id="contact-list" style="padding:20px;">
+        <div style="background:#1c272d; padding:15px; border-radius:10px; border-left:4px solid var(--neon-blue)">
+            <h4 id="target-id-label">Esperando...</h4>
+            <button class="btn" style="width:100%; margin-top:10px; padding:10px;" onclick="document.getElementById('chat-page').style.display='flex'; render();">ABRIR CHAT</button>
         </div>
     </div>
 
-    <div id="modal-ad" class="modal"><div class="modal-content" style="border-color:var(--p3)"><h2>⭐ RECOMPENSA</h2><p>Mira el video para obtener 50 estrellas.</p><div style="width:100%; height:100px; background:#000; border-radius:15px; display:flex; align-items:center; justify-content:center; margin:15px 0;"><span id="ad-count" style="font-size:40px; font-weight:900; color:var(--gold)">3</span></div><button id="btn-claim" class="btn-main-action" style="display:none;" onclick="claim()">RECLAMAR 50 ⭐</button></div></div>
+    <div id="chat-page" class="page">
+        <header>
+            <button onclick="document.getElementById('chat-page').style.display='none'" style="background:none; border:none; color:var(--wa-green); font-size:20px;">←</button>
+            <span id="chat-title">Chat</span>
+            <div style="width:30px"></div>
+        </header>
+        <div id="chat-flow"></div>
+        <div class="input-row">
+            <input type="text" id="minput" placeholder="Escribe un mensaje...">
+            <button class="btn" style="width:50px; padding:10px;" onclick="sendMsg()">➤</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    const S_URL = 'https://iitlcnrkgwobzckxwnau.supabase.co';
+    const S_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlpdGxjbnJrZ3dvYnpja3h3bmF1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ5NzcxMzQsImV4cCI6MjA5MDU1MzEzNH0.O4iyR4gF7GQO8AvDpTYRoKjqRsUdNc8hKM80YXboCmE';
     
-    <div id="modal-res" class="modal"><div class="modal-content"><h1 id="res-t"></h1><div id="res-v" style="font-size:35px; color:var(--p3); margin:20px 0; font-weight:900;"></div><button onclick="location.reload()" class="btn-main-action">VOLVER AL MENU</button></div></div>
-    <div id="modal-msg" class="modal"><div class="modal-content"><h2 id="msg-t"></h2><p id="msg-b"></p><button onclick="closeM('modal-msg')" class="btn-main-action">OK</button></div></div>
-    <div id="modal-surr" class="modal"><div class="modal-content" style="border-color:var(--p2)"><h2>¿RENDIRSE?</h2><p>Premio para tus rivales.</p><div style="display:flex; gap:10px;"><button onclick="closeM('modal-surr')" class="btn-nav" style="flex:1">VOLVER</button><button onclick="quit()" class="btn-main-action" style="flex:1; background:var(--p2);">SÍ, RENDIRSE</button></div></div></div>
+    // ÚNICA DECLARACIÓN DE SUPABASE
+    const supabaseClient = window.supabase.createClient(S_URL, S_KEY);
 
-    <script>
-        const sb = supabase.createClient('https://tvmuopavbzyutlhveyyj.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR2bXVvcGF2Ynp5dXRsaHZleXlqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ1ODE0NTcsImV4cCI6MjA5MDE1NzQ1N30.HbSzRuxZ_Tx8_p3DWtDDiQ_q7H6JxNn01JAU2_M8q1U', { auth:{persistSession:false} });
+    let myId = "";
+    let toId = "";
+    let chatChannel = null;
 
-        let stars=50, bal=100, mode='ia', role='host', rid=null, bet=10, isPlaying=false, turn=1, myNum=1, grid=6;
-        let pActive=[0,0,0,0], pNames=["","","",""], sc=[0,0,0,0], ch=null, actx=null;
-        const pColors=['var(--p1)','var(--p2)','var(--p3)','var(--p4)'];
-
-        function initApp() { grid=6; createBoard(); updateHUD(); }
-
-        function openSetup(m) { 
-            mode=m; document.querySelectorAll('.btn-nav').forEach(b=>b.classList.remove('active'));
-            const btn = document.getElementById('n-'+m); if(btn) btn.classList.add('active');
-            document.getElementById('on-fields').style.display=m==='online'?'block':'none';
-            document.getElementById('local-fields').style.display=m==='local'?'block':'none';
-            document.getElementById('st-title').innerText = "SETUP "+m.toUpperCase();
-            showM('modal-setup'); valC();
-        }
-
-        function setR(r) { 
-            role=r; document.getElementById('t-host').classList.toggle('active', r==='host');
-            document.getElementById('t-guest').classList.toggle('active', r==='guest');
-            if(r==='host') { rid=Math.floor(1000+Math.random()*9000); document.getElementById('room-id').value=rid; document.getElementById('share-box').style.display='flex'; }
-            else { document.getElementById('room-id').value=""; document.getElementById('share-box').style.display='none'; }
-            valC();
-        }
-
-        function valC() { const v=document.getElementById('room-id').value; document.getElementById('btn-pay').style.opacity = (mode==='online' && !v) ? "0.3":"1"; }
-
-        function pay() {
-            bet=parseFloat(document.getElementById('bet-s').value);
-            if(mode!=='local' && (stars<10 || bal<bet)) { if(stars<10) showAd(); else notifyM("ALERTA", "Saldo QTS insuficiente."); return; }
-            pNames[0]=document.getElementById('nick-s').value || "Tú";
-            closeM('modal-setup');
-            if(mode==='online') { rid=document.getElementById('room-id').value; connect(); }
-            else if(mode==='ia') { pActive=[1,1,0,0]; pNames[1]="IA Master"; start(); }
-            else { const c=parseInt(document.getElementById('p-count').value); pActive=Array(4).fill(0).map((_,i)=>i<c?1:0); start(); }
-        }
-
-        function connect() {
-            document.getElementById('room-tag').style.display='block';
-            document.getElementById('room-id-txt').innerText=rid;
-            ch = sb.channel('g_'+rid, { config:{broadcast:{self:true}} });
-            ch.on('broadcast', {event:'move'}, ({payload})=>{ syncMove(payload.id, payload.p, payload.nextTurn); })
-            .on('broadcast', {event:'lobby'}, ({payload})=>{
-                const i=payload.num-1; pNames[i]=payload.name; pActive[i]=1;
-                document.getElementById('n'+(i+1)).innerText=pNames[i];
-                document.getElementById('s'+(i+1)).innerText="EN LÍNEA";
-                document.getElementById('p'+(i+1)+'-corner').style.opacity="1";
-                if(role==='host' && pActive.filter(x=>x===1).length>0) document.getElementById('host-start-ui').style.display='block';
-            })
-            .on('broadcast', {event:'go'}, ({payload})=>{ grid=payload.g; bet=payload.b; start(); })
-            .on('broadcast', {event:'quit'}, ({payload})=>{ notifyM("¡VICTORIA!", payload.n+" se retiró. ¡Ganas el premio!"); bal+=bet*2; setTimeout(()=>location.reload(), 3000); })
-            .subscribe(s => { if(s==='SUBSCRIBED') { 
-                if(role==='host') { myNum=1; pActive[0]=1; document.getElementById('p1-corner').style.opacity="1"; document.getElementById('n1').innerText=pNames[0]; document.getElementById('s1').innerText="TU (HOST)"; }
-                else ch.send({type:'broadcast', event:'join_req', payload:{n:pNames[0]}});
-            }});
-            ch.on('broadcast', {event:'join_req'}, ({payload})=>{ if(role==='host') { const n=pActive.filter(x=>x===1).length+1; ch.send({type:'broadcast', event:'assign', payload:{n:payload.n, num:n}}); }})
-            .on('broadcast', {event:'assign'}, ({payload})=>{ if(pNames[0]===payload.n) { myNum=payload.num; ch.send({type:'broadcast', event:'lobby', payload:{name:pNames[0], num:myNum}}); }});
-        }
-
-        function hostBegin() { ch.send({type:'broadcast', event:'go', payload:{g:parseInt(document.getElementById('grid-s').value), b:bet}}); }
-
-        function start() {
-            if(mode!=='local'){ stars-=10; bal-=bet; }
-            isPlaying=true; turn=1; createBoard();
-            document.getElementById('mode-ui').style.display='none';
-            document.getElementById('host-start-ui').style.display='none';
-            document.getElementById('btn-surr').style.display='block';
-            document.getElementById('board').classList.add('active');
-            updateHUD();
-        }
-
-        function createBoard() {
-            const b=document.getElementById('board'); b.innerHTML='';
-            const g=grid; const s=Math.floor((Math.min(window.innerWidth,450,window.innerHeight-350)-40)/g);
-            b.style.gridTemplateColumns=`repeat(${g*2+1}, auto)`;
-            for(let r=0; r<=g; r++) {
-                for(let c=0; c<=g; c++) {
-                    const d=document.createElement('div'); d.className='dot'; b.appendChild(d);
-                    if(c<g) b.appendChild(mkL('h',r,c,s));
-                }
-                if(r<g) {
-                    for(let c=0; c<=g; c++) {
-                        b.appendChild(mkL('v',r,c,s));
-                        if(c<g) { const bx=document.createElement('div'); bx.className='box'; bx.id=`box-${r}-${c}`; bx.style.width=s+'px'; bx.style.height=s+'px'; b.appendChild(bx); }
-                    }
-                }
-            }
-        }
-
-        function mkL(t,r,c,s) {
-            const l=document.createElement('div'); l.className=`line ${t==='h'?'h':'v'}`; l.id=`l-${t}-${r}-${c}`;
-            if(t==='h') l.style.width=s+'px', l.style.height='6px'; else l.style.height=s+'px', l.style.width='6px';
-            l.onclick=()=>{ if(!isPlaying || (mode==='online' && turn !== myNum)) return; execMove(l, true); }; return l;
-        }
-
-        function execMove(l, loc) {
-            if(l.classList.contains('taken')) return;
-            const pIdx = turn - 1;
-            l.style.color=pColors[pIdx]; l.classList.add('taken');
-            let scored = check(l, pIdx);
-            let nextT = turn;
-            if(!scored) { do { nextT = nextT % 4 + 1; } while(pActive[nextT-1]===0); }
-            if(loc && mode==='online') ch.send({type:'broadcast', event:'move', payload:{id:l.id, p:myNum, nextTurn: nextT}});
-            turn = nextT;
-            if(mode==='ia' && turn===2) setTimeout(ia, 600);
-            updateHUD(); checkEnd();
-        }
-
-        function syncMove(id, pNum, nextTurn) {
-            const l=document.getElementById(id); if(!l || l.classList.contains('taken')) return;
-            l.style.color=pColors[pNum-1]; l.classList.add('taken');
-            check(l, pNum-1);
-            turn = nextTurn; updateHUD(); checkEnd();
-        }
-
-        function check(l, pIdx) {
-            let f=false; const d=l.id.split('-'), t=d[1], r=parseInt(d[2]), c=parseInt(d[3]);
-            const fill = (rr,cc) => {
-                const b=document.getElementById(`box-${rr}-${cc}`); if(!b || b.classList.contains('filled')) return false;
-                const s=[document.getElementById(`l-h-${rr}-${cc}`), document.getElementById(`l-h-${rr+1}-${cc}`), document.getElementById(`l-v-${rr}-${cc}`), document.getElementById(`l-v-${rr+1}-${cc+1}`)];
-                if(s.every(x=>x && x.classList.contains('taken'))){
-                    b.classList.add('filled'); b.style.backgroundColor=pColors[pIdx]+"50";
-                    b.style.border=`1px solid ${pColors[pIdx]}`;
-                    b.innerHTML=`<span style="font-weight:900;">${pNames[pIdx][0].toUpperCase()}</span>`;
-                    sc[pIdx]++; return true;
-                } return false;
-            };
-            if(t==='h'){ if(fill(r,c))f=true; if(fill(r-1,c))f=true; } else { if(fill(r,c))f=true; if(fill(r,c-1))f=true; } return f;
-        }
-
-        function updateHUD() { 
-            document.getElementById('h-star').innerText="⭐ "+stars; document.getElementById('h-bal').innerText="Q "+bal.toFixed(2); document.getElementById('h-prz').innerText="Q "+(bet*2).toFixed(2);
-            document.querySelectorAll('.corner').forEach((c,i)=>c.classList.toggle('active', turn===i+1));
-            document.getElementById('board').classList.toggle('locked', (mode==='online' && isPlaying && turn !== myNum));
-        }
-
-        function showAd() { showM('modal-ad'); let c=3; const t=setInterval(()=>{ c--; document.getElementById('ad-count').innerText=c; if(c<=0){ clearInterval(t); document.getElementById('btn-claim').style.display='block'; }}, 1000); }
-        function claim() { stars+=50; closeM('modal-ad'); updateHUD(); }
-        function quit() { if(ch) ch.send({type:'broadcast', event:'quit', payload:{n:pNames[myNum-1]}}); location.reload(); }
-        function showM(id) { document.getElementById(id).style.display='flex'; }
-        function closeM(id) { document.getElementById(id).style.display='none'; }
-        function notifyM(t, b) { document.getElementById('msg-t').innerText=t; document.getElementById('msg-b').innerText=b; showM('modal-msg'); }
-        function cpC() { navigator.clipboard.writeText(rid); notifyM("CÓDIGO COPIADO", rid); }
-        function shWA() { window.open(`https://wa.me/?text=Entra a mi mesa de Galletita! Código: ${rid}`); }
+    function startApp(id) {
+        myId = id;
+        toId = (id === 'User_A') ? 'User_B' : 'User_A';
         
-        function ia() {
-            const lines=Array.from(document.querySelectorAll('.line:not(.taken)'));
-            // IA PRIORITARIA: CIERRE DE CUADROS
-            const winMove = lines.find(l=>{
-                const d=l.id.split('-'), r=parseInt(d[2]), c=parseInt(d[3]);
-                const cnt=(rr,cc)=>[document.getElementById(`l-h-${rr}-${cc}`), document.getElementById(`l-h-${rr+1}-${cc}`), document.getElementById(`l-v-${rr}-${cc}`), document.getElementById(`l-v-${rr+1}-${cc+1}`)].filter(x=>x&&x.classList.contains('taken')).length;
-                return d[1]==='h'?(cnt(r,c)===3||cnt(r-1,c)===3):(cnt(r,c)===3||cnt(r,c-1)===3);
-            });
-            execMove(winMove || lines[Math.floor(Math.random()*lines.length)], false);
-        }
+        document.getElementById('selector').style.display = 'none';
+        document.getElementById('display-id').innerText = "ID: " + myId;
+        document.getElementById('target-id-label').innerText = "Contacto: " + toId;
+        document.getElementById('chat-title').innerText = toId;
 
-        function checkEnd() { if(document.querySelectorAll('.line:not(.taken)').length===0){ isPlaying=false; const win=sc[myNum-1]===Math.max(...sc); document.getElementById('res-t').innerText=win?"¡GANASTE!":"FIN DE PARTIDA"; document.getElementById('res-v').innerText=win?`+ Q ${(bet*2).toFixed(2)}`:`Score: ${sc[myNum-1]}`; if(win) bal+=bet*2; showM('modal-res'); } }
-    </script>
+        // Suscribirse al canal
+        chatChannel = supabaseClient.channel('p2p_room')
+        .on('broadcast', { event: 'msg' }, (payload) => {
+            if(payload.payload.to === myId) saveMessage(payload.payload, 'r');
+        })
+        .subscribe();
+    }
+
+    function sendMsg() {
+        const inp = document.getElementById('minput');
+        if(!inp.value) return;
+
+        const data = {
+            from: myId, to: toId, text: inp.value,
+            time: Date.now(), exp: Date.now() + (30*60*1000)
+        };
+
+        chatChannel.send({ type: 'broadcast', event: 'msg', payload: data });
+        saveMessage(data, 's');
+        inp.value = "";
+    }
+
+    function saveMessage(msg, type) {
+        let history = JSON.parse(localStorage.getItem('chat_' + myId) || '[]');
+        msg.type = type;
+        history.push(msg);
+        localStorage.setItem('chat_' + myId, JSON.stringify(history));
+        render();
+    }
+
+    function render() {
+        const flow = document.getElementById('chat-flow');
+        let history = JSON.parse(localStorage.getItem('chat_' + myId) || '[]');
+        const now = Date.now();
+
+        flow.innerHTML = "";
+        history.filter(m => m.exp > now).forEach(m => {
+            const diff = Math.round((m.exp - now) / 1000);
+            const div = document.createElement('div');
+            div.className = `bubble ${m.type}`;
+            div.innerHTML = `${m.text} <span class="t">${Math.floor(diff/60)}:${(diff%60).toString().padStart(2,'0')}</span>`;
+            flow.appendChild(div);
+        });
+        flow.scrollTop = flow.scrollHeight;
+    }
+
+    setInterval(() => {
+        if(document.getElementById('chat-page').style.display === 'flex') render();
+    }, 1000);
+</script>
 </body>
 </html>
