@@ -1,32 +1,30 @@
-// sw.js - Service Worker
+// sw.js
 importScripts('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2');
+importScripts('https://unpkg.com/dexie@latest/dist/dexie.js');
 
-const supabase = self.supabase.createClient('TU_URL', 'TU_KEY');
+const db = new Dexie("CyberDB");
+db.version(1).stores({ messages: '++id, from, to, text, time, exp' });
+
+// USA TUS CREDENCIALES AQUÍ
+const supabase = self.supabase.createClient('https://iitlcnrkgwobzckxwnau.supabase.co', 'TU_KEY_AQUÍ');
 
 self.addEventListener('install', () => self.skipWaiting());
+self.addEventListener('activate', (e) => e.waitUntil(clients.claim()));
 
-// Escuchar mensajes en segundo plano
-const channel = supabase.channel('cyber_v15').on('broadcast', {event:'m'}, (p) => {
-    // Solo actuamos si el mensaje es para nosotros
-    // Nota: El ID de usuario debe guardarse en IndexedDB o pasarse al SW
-    if (p.payload.to === self.myId) {
-        showNotification(p.payload);
-        saveMessageToDB(p.payload);
+// Escucha de mensajes
+supabase.channel('cyber_v16').on('broadcast', {event:'m'}, async (p) => {
+    try {
+        await db.messages.add(p.payload);
+        
+        self.registration.showNotification(`Cyber-Link`, {
+            body: p.payload.text,
+            icon: 'https://i.pravatar.cc/100',
+            tag: 'cyber-msg'
+        });
+
+        const allClients = await self.clients.matchAll();
+        allClients.forEach(client => client.postMessage({ type: 'REFRESH_CHAT' }));
+    } catch (err) {
+        console.error("Error en SW:", err);
     }
 }).subscribe();
-
-function showNotification(data) {
-    self.registration.showNotification(`Cyber-Link: ${data.from}`, {
-        body: data.text,
-        icon: 'https://i.pravatar.cc/100',
-        vibrate: [200, 100, 200],
-        tag: 'msg-group'
-    });
-}
-
-// Escuchar comandos desde las páginas (index.html o chat.html)
-self.addEventListener('message', (event) => {
-    if (event.data.type === 'SET_ID') {
-        self.myId = event.data.id;
-    }
-});
