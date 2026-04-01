@@ -123,34 +123,50 @@
     </style>
 </head>
 <body onclick="initAudio()">
-    <script src="https://unpkg.com/dexie@latest/dist/dexie.js"></script>
-<script>
-    const db = new Dexie("CyberDB");
-    db.version(1).stores({ messages: '++id, from, to, text, time, exp' });
-
+    <script>
+    // 1. Registrar el Service Worker
     if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('sw.js');
+        navigator.serviceWorker.register('sw.js').then(reg => {
+            console.log('Motor de fondo activo');
+            
+            // Enviar nuestro ID al Service Worker para que sepa qué mensajes filtrar
+            if(localStorage.getItem('myId')) {
+                reg.active.postMessage({
+                    type: 'SET_ID', 
+                    id: localStorage.getItem('myId')
+                });
+            }
+        });
     }
 
-    // Escuchar avisos del Service Worker
+// Escuchar al Service Worker cuando nos mande un mensaje
+// index.html - RECEPTOR DE MENSAJES EN SEGUNDO PLANO
+if ('serviceWorker' in navigator) {
     navigator.serviceWorker.addEventListener('message', (event) => {
-        if (event.data.type === 'REFRESH_CHAT') {
-            if (typeof renderChat === 'function') renderChat();
-            new Audio('https://actions.google.com/sounds/v1/cartoon/pop.ogg').play();
+        if (event.data.type === 'SAVE_AND_REFRESH') {
+            const msg = event.data.payload;
+            
+            // 1. GUARDAR EN EL HISTORIAL (Para que al entrar al chat ya estén ahí)
+            let historial = JSON.parse(localStorage.getItem('cyber_chat_v1') || '[]');
+            historial.push(msg);
+            localStorage.setItem('cyber_chat_v1', JSON.stringify(historial));
+
+            // 2. DOPAMINA VISUAL: Notificación en la lista de amigos
+            console.log("¡Mensaje recibido en index mientras navegabas!");
+            
+            // Aquí puedes hacer que suene el POP aunque estés en el menú
+            const audio = new Audio('https://actions.google.com/sounds/v1/cartoon/pop.ogg');
+            audio.play().catch(() => console.log("Clickea la pantalla para activar sonido"));
+
+            // Si tienes un contador de mensajes en index, actualízalo aquí
+            if (document.getElementById('notif-badge')) {
+                document.getElementById('notif-badge').innerText = "!";
+                document.getElementById('notif-badge').style.display = "block";
+            }
         }
     });
+}
 </script>
-
-<div id="modal-cost" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.95); z-index:9999; align-items:center; justify-content:center;">
-    <div style="background:#111; border:2px solid #ff007f; padding:30px; border-radius:25px; text-align:center; width:85%;">
-        <h2 style="color:#ff007f; margin-bottom:15px;">CANAL SEGURO</h2>
-        <p style="color:#ccc; font-size:12px;">Costo: 1 Estrella ⭐ por mensaje.<br>El Service Worker mantendrá la recepción activa en el panel.</p>
-        <div style="background:rgba(255,204,0,0.1); border:1px solid #ffcc00; padding:10px; margin:15px 0; border-radius:10px; font-size:11px; color:#ffcc00;">
-            ⚠️ IMPORTANTE: No quites la app de la lista de recientes para que el motor de fondo no se detenga.
-        </div>
-        <button onclick="document.getElementById('modal-cost').style.display='none'" style="background:#ff007f; color:white; border:none; padding:15px; width:100%; border-radius:12px; font-weight:bold;">ENTRAR</button>
-    </div>
-</div>
 
     <div class="main-container">
         <div class="hud-header">
