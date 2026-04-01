@@ -2,70 +2,111 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Cyber-Link Ultra</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         :root { 
             --neon-pink: #ff007f; --neon-blue: #00f3ff; --neon-gold: #ffcc00; 
-            --bg-dark: #0a0a0a; --glass: rgba(255, 255, 255, 0.1); 
+            --bg-dark: #0a0a0a; --glass: rgba(255, 255, 255, 0.08); 
         }
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; }
-        body { background: #000; color: white; height: 100vh; overflow: hidden; display: flex; justify-content: center; align-items: center; }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; -webkit-tap-highlight-color: transparent; }
+        
+        /* Ajuste para que NADA se desplace y el teclado no rompa el diseño */
+        html, body { 
+            height: 100dvh; width: 100vw; overflow: hidden; 
+            background: #000; color: white; position: fixed; 
+        }
         
         .app-shell { 
-            width: 100%; max-width: 420px; height: 100%; background: var(--bg-dark); 
-            position: relative; display: flex; flex-direction: column; 
-            border-left: 1px solid #222; border-right: 1px solid #222;
+            width: 100%; height: 100%; display: flex; flex-direction: column; 
         }
 
-        header { padding: 15px; background: #111; border-bottom: 2px solid var(--neon-pink); display: flex; justify-content: space-between; align-items: center; }
-        .stats-bar { display: flex; gap: 10px; font-size: 11px; color: var(--neon-gold); font-weight: bold; }
+        header { 
+            padding: env(safe-area-inset-top) 15px 10px; 
+            background: #111; border-bottom: 2px solid var(--neon-pink); 
+            display: flex; justify-content: space-between; align-items: center; 
+            z-index: 10;
+        }
+
+        .stats-bar { display: flex; gap: 8px; font-size: 10px; color: var(--neon-gold); font-weight: bold; }
 
         /* Lista Amigos */
-        .content-scroll { flex: 1; overflow-y: auto; padding: 15px; background: linear-gradient(180deg, #0a0a0a 0%, #150510 100%); }
+        .content-scroll { flex: 1; overflow-y: auto; padding: 15px; padding-bottom: 100px; }
         .user-card { 
-            background: var(--glass); border-radius: 20px; padding: 15px; margin-bottom: 15px;
+            background: var(--glass); border-radius: 15px; padding: 15px; margin-bottom: 12px;
             border: 1px solid rgba(255,0,127,0.2);
         }
         .user-header { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
-        .pfp-large { width: 55px; height: 55px; border-radius: 50%; border: 2px solid var(--neon-pink); object-fit: cover; }
+        .pfp-large { width: 50px; height: 50px; border-radius: 50%; border: 2px solid var(--neon-pink); object-fit: cover; }
         
-        .btn-row { display: flex; gap: 5px; }
+        .btn-row { display: flex; gap: 6px; }
         .btn-game { 
-            flex: 1; border: none; border-radius: 12px; font-size: 9px; font-weight: bold; 
-            text-transform: uppercase; cursor: pointer; padding: 10px 5px; color: white;
-            box-shadow: 0 3px 0 rgba(0,0,0,0.5);
+            flex: 1; border: none; border-radius: 10px; font-size: 10px; font-weight: 800; 
+            text-transform: uppercase; cursor: pointer; padding: 12px 5px; color: white;
+            box-shadow: 0 4px 0 rgba(0,0,0,0.5); transition: 0.1s;
         }
         .btn-pink { background: var(--neon-pink); }
         .btn-dark { background: #1a1a1a; border: 1px solid #333; }
+        .btn-game:active { transform: translateY(2px); box-shadow: none; }
 
-        /* Chat View */
-        .chat-view { position: absolute; inset: 0; background: #050505; display: none; flex-direction: column; z-index: 100; }
-        .chat-top { padding: 10px 15px; display: flex; align-items: center; gap: 10px; background: #000; border-bottom: 1px solid #222; }
-        #chat-flow { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 12px; }
-        
-        .bubble { max-width: 75%; padding: 12px 16px; border-radius: 20px; font-size: 14px; position: relative; }
+        /* Chat Pantalla Completa */
+        .chat-view { 
+            position: fixed; inset: 0; background: #000; 
+            display: none; flex-direction: column; z-index: 100;
+            height: 100dvh;
+        }
+        .chat-top { 
+            padding: env(safe-area-inset-top) 15px 10px; 
+            display: flex; align-items: center; gap: 10px; 
+            background: #080808; border-bottom: 1px solid #222; 
+        }
+
+        #chat-flow { 
+            flex: 1; overflow-y: auto; padding: 15px; 
+            display: flex; flex-direction: column; gap: 10px;
+            background: radial-gradient(circle at top, #110008 0%, #000 100%);
+        }
+
+        /* Burbujas */
+        .bubble { max-width: 80%; padding: 12px; border-radius: 18px; font-size: 14px; position: relative; animation: popIn 0.2s cubic-bezier(0.17, 0.89, 0.32, 1.28); }
+        @keyframes popIn { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
         .sent { align-self: flex-end; background: var(--neon-pink); border-bottom-right-radius: 2px; }
         .recv { align-self: flex-start; background: #222; border-bottom-left-radius: 2px; border: 1px solid #333; }
         
         .msg-meta { font-size: 8px; opacity: 0.6; display: flex; justify-content: space-between; margin-top: 5px; }
-        .countdown { color: var(--neon-gold); margin-left: 8px; }
+        .countdown { color: var(--neon-gold); font-weight: bold; margin-left: 10px; }
 
         /* Regalos */
         #gift-menu { 
-            position: absolute; bottom: 80px; left: 10px; right: 10px; 
-            background: #111; border: 2px solid var(--neon-gold); border-radius: 20px;
+            position: absolute; bottom: 85px; left: 10px; right: 10px; 
+            background: rgba(10,10,10,0.98); border: 2px solid var(--neon-gold); border-radius: 20px;
             display: none; grid-template-columns: repeat(3, 1fr); gap: 10px; padding: 15px; z-index: 200;
         }
-        .gift-item { text-align: center; font-size: 10px; padding: 10px; background: #1a1a1a; border-radius: 10px; cursor: pointer; border: 1px solid #333; }
+        .gift-item { text-align: center; font-size: 10px; padding: 12px; background: #1a1a1a; border-radius: 12px; border: 1px solid #333; }
 
-        .input-area { padding: 15px; background: #000; display: flex; gap: 10px; align-items: center; border-top: 1px solid #222; }
-        .input-box { flex: 1; background: #1a1a1a; border-radius: 25px; padding: 12px 20px; border: 1px solid #333; color: white; outline: none; }
-        .send-btn { background: var(--neon-pink); width: 45px; height: 45px; border-radius: 50%; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        /* Input FIJO */
+        .input-area { 
+            padding: 10px 15px calc(env(safe-area-inset-bottom) + 10px);
+            background: #000; display: flex; gap: 8px; align-items: center; border-top: 1px solid #222;
+        }
+        .input-box { 
+            flex: 1; background: #1a1a1a; border-radius: 25px; padding: 12px 18px; 
+            border: 1px solid #333; color: white; outline: none; font-size: 16px;
+        }
 
-        .modal { position: absolute; inset: 0; background: rgba(0,0,0,0.95); display: none; align-items: center; justify-content: center; z-index: 1000; }
-        .modal-card { background: #111; border: 2px solid var(--neon-pink); padding: 30px; width: 85%; border-radius: 25px; text-align: center; }
+        /* Modal con Aviso de No Cerrar */
+        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.95); display: none; align-items: center; justify-content: center; z-index: 1000; }
+        .modal-card { 
+            background: #111; border: 2px solid var(--neon-pink); padding: 30px; 
+            width: 88%; border-radius: 25px; text-align: center;
+            box-shadow: 0 0 30px rgba(255, 0, 127, 0.3);
+        }
+        .warning-text { 
+            background: rgba(255, 204, 0, 0.1); border: 1px solid var(--neon-gold);
+            padding: 10px; border-radius: 10px; font-size: 11px; color: var(--neon-gold);
+            margin-top: 20px; line-height: 1.4;
+        }
     </style>
 </head>
 <body>
@@ -74,14 +115,14 @@
 <audio id="snd-pop" src="https://actions.google.com/sounds/v1/cartoon/pop.ogg"></audio>
 
 <div id="selector" style="position:fixed; inset:0; background:#000; z-index:2000; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:20px;">
-    <h1 style="color:var(--neon-pink)">CYBER-LINK</h1>
-    <button class="btn-game btn-pink" style="width:200px" onclick="startApp('User_A')">USUARIO A</button>
-    <button class="btn-game btn-pink" style="width:200px" onclick="startApp('User_B')">USUARIO B</button>
+    <h1 style="color:var(--neon-pink); text-shadow: 0 0 15px var(--neon-pink);">CYBER-LINK</h1>
+    <button class="btn-game btn-pink" style="width:240px" onclick="startApp('User_A')">SOY USUARIO A</button>
+    <button class="btn-game btn-pink" style="width:240px" onclick="startApp('User_B')">SOY USUARIO B</button>
 </div>
 
 <div class="app-shell">
     <header>
-        <span id="my-id" style="font-size:11px; color:var(--neon-pink)">---</span>
+        <span id="my-id" style="font-size:10px; color:var(--neon-pink)">---</span>
         <div class="stats-bar">
             <span>⚡ <span id="stat-e">100</span></span> 
             <span>💎 <span id="stat-g">12</span></span> 
@@ -93,22 +134,26 @@
 
     <div id="modal-cost" class="modal">
         <div class="modal-card">
-            <h2 style="color:var(--neon-gold)">VÍNCULO ACTIVO</h2>
-            <p style="color:#888; font-size:12px; margin: 15px 0;">Consume 1 Estrella ⭐ por mensaje.<br>Solo se avisa una vez al día.</p>
-            <button class="btn-game btn-pink" style="width:100%" onclick="enterChat()">ACEPTAR</button>
+            <h2 style="color:var(--neon-pink); margin-bottom:10px;">¡CHAT ACTIVO!</h2>
+            <p style="color:#ccc; font-size:13px;">Se cobrará <b>1 Estrella ⭐</b> por cada mensaje enviado para mantener el túnel seguro.</p>
+            
+            <div class="warning-text">
+                ⚠️ <b>IMPORTANTE:</b> Para asegurar la recepción de los mensajes <b>no cierres la página del chat</b>. Puedes minimizarla o bloquear el móvil, pero no la quites de las pestañas recientes.
+            </div>
+            
+            <button class="btn-game btn-pink" style="width:100%; margin-top:20px;" onclick="enterChat()">ENTRAR AL CANAL</button>
         </div>
     </div>
 
     <div id="chat-view" class="chat-view">
         <div class="chat-top">
-            <span onclick="closeChat()" style="color:var(--neon-pink); font-size:20px; cursor:pointer;">❮</span>
-            <img id="chat-pfp" src="" class="pfp-large" style="width:40px; height:40px;" onclick="alert('Ver Foto')">
+            <span onclick="closeChat()" style="color:var(--neon-pink); font-size:24px; padding-right:10px;">❮</span>
+            <img id="chat-pfp" src="" class="pfp-large" style="width:38px; height:38px;">
             <div style="flex:1">
-                <div id="chat-name" style="font-size:14px; font-weight:bold;">User</div>
-                <div id="chat-date" style="font-size:8px; color:var(--neon-blue)">-</div>
+                <div id="chat-name" style="font-size:15px; font-weight:bold;">User</div>
+                <div id="chat-date" style="font-size:9px; color:var(--neon-blue)">CONEXIÓN ENCRIPTADA</div>
             </div>
-            <button class="btn-game btn-dark" style="flex:0; padding:5px 10px" onclick="alert('Perfil de '+targetId)">PERFIL</button>
-            <span style="cursor:pointer; margin-left:10px;" onclick="alert('Config')">⋮</span>
+            <button class="btn-game btn-dark" style="flex:0; padding:6px 12px" onclick="alert('Perfil')">PERFIL</button>
         </div>
         
         <div id="chat-flow"></div>
@@ -123,27 +168,20 @@
         </div>
 
         <div class="input-area">
-            <span style="font-size:22px; cursor:pointer;" onclick="toggleGifts()">🎁</span>
-            <input type="text" id="msg-input" class="input-box" placeholder="Mensaje...">
-            <button class="send-btn" onclick="sendMsg()">
-                <svg viewBox="0 0 24 24" width="20" height="20" fill="white"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"></path></svg>
+            <span style="font-size:24px; cursor:pointer;" onclick="toggleGifts()">🎁</span>
+            <input type="text" id="msg-input" class="input-box" placeholder="Escribe aquí...">
+            <button class="send-btn" style="background:var(--neon-pink); border:none; width:46px; height:46px; border-radius:50%;" onclick="sendMsg()">
+                <svg viewBox="0 0 24 24" width="22" height="22" fill="white"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"></path></svg>
             </button>
         </div>
     </div>
 </div>
 
 <script>
-    // FIX: Evitamos error de re-declaración usando un objeto único
-    const cyberSupabase = window.supabase.createClient('https://iitlcnrkgwobzckxwnau.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlpdGxjbnJrZ3dvYnpja3h3bmF1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ5NzcxMzQsImV4cCI6MjA5MDU1MzEzNH0.O4iyR4gF7GQO8AvDpTYRoKjqRsUdNc8hKM80YXboCmE');
+    const supClient = window.supabase.createClient('https://iitlcnrkgwobzckxwnau.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlpdGxjbnJrZ3dvYnpja3h3bmF1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ5NzcxMzQsImV4cCI6MjA5MDU1MzEzNH0.O4iyR4gF7GQO8AvDpTYRoKjqRsUdNc8hKM80YXboCmE');
 
-    let myId = ""; let targetId = ""; let ch = null;
-    let stats = { s: 850, g: 12, e: 100 };
-
-    const users = [
-        {id:'User_A', pfp:'https://i.pravatar.cc/150?u=a'},
-        {id:'User_B', pfp:'https://i.pravatar.cc/150?u=b'},
-        {id:'Sari_R', pfp:'https://i.pravatar.cc/150?u=sari'}
-    ];
+    let myId = ""; let targetId = ""; let liveChan = null;
+    let myStats = { s: 850, g: 12, e: 100 };
 
     function playSnd(id) { document.getElementById('snd-'+id).play().catch(()=>{}); }
 
@@ -151,19 +189,23 @@
         myId = id;
         document.getElementById('selector').style.display = 'none';
         document.getElementById('my-id').innerText = "ID: " + myId;
+        
         if (Notification.permission !== "granted") Notification.requestPermission();
-        renderFriends();
+        renderUsers();
 
-        ch = cyberSupabase.channel('v11').on('broadcast', {event:'m'}, (p) => {
+        liveChan = supClient.channel('cyber_v13').on('broadcast', {event:'m'}, (p) => {
             if(p.payload.to === myId) {
                 save(p.payload, 'recv');
                 playSnd('pop');
-                showPush(p.payload.from, p.payload.text);
+                if (Notification.permission === "granted" && document.hidden) {
+                    new Notification(`Cyber-Link: ${p.payload.from}`, { body: p.payload.text });
+                }
             }
         }).subscribe();
     }
 
-    function renderFriends() {
+    function renderUsers() {
+        const users = [{id:'User_A', pfp:'https://i.pravatar.cc/150?u=a'}, {id:'User_B', pfp:'https://i.pravatar.cc/150?u=b'}, {id:'Sari_R', pfp:'https://i.pravatar.cc/150?u=sari'}];
         const list = document.getElementById('friends-list');
         list.innerHTML = "";
         users.forEach(u => {
@@ -175,38 +217,37 @@
                         <h4 style="font-size:15px;">${u.id}</h4>
                     </div>
                     <div class="btn-row">
-                        <button class="btn-game btn-dark">SOLICITAR</button>
-                        <button class="btn-game btn-dark" onclick="alert('Perfil de '+targetId)">PERFIL</button>
-                        <button class="btn-game btn-pink" onclick="prepareChat('${u.id}', '${u.pfp}')">CHATEAR</button>
+                        <button class="btn-game btn-dark" onclick="playSnd('click')">SOLICITAR</button>
+                        <button class="btn-game btn-dark" onclick="playSnd('click')">PERFIL</button>
+                        <button class="btn-game btn-pink" onclick="checkModal('${u.id}', '${u.pfp}')">CHATEAR</button>
                     </div>
                 </div>`;
         });
     }
 
-    function prepareChat(id, pfp) {
+    function checkModal(id, pfp) {
         targetId = id;
         document.getElementById('chat-pfp').src = pfp;
         document.getElementById('chat-name').innerText = id;
-        document.getElementById('chat-date').innerText = new Date().toLocaleDateString();
         
         const today = new Date().toDateString();
-        if (localStorage.getItem('daily_v11_'+myId) !== today) {
+        if (localStorage.getItem('daily_v13_'+myId) !== today) {
             document.getElementById('modal-cost').style.display = 'flex';
-            localStorage.setItem('daily_v11_'+myId, today);
+            localStorage.setItem('daily_v13_'+myId, today);
         } else { enterChat(); }
     }
 
     function enterChat() {
         document.getElementById('modal-cost').style.display = 'none';
         document.getElementById('chat-view').style.display = 'flex';
-        render(true); // Renderizado completo inicial
+        render(true);
     }
 
     function sendMsg() {
         const inp = document.getElementById('msg-input');
-        if(!inp.value || stats.s <= 0) return;
-        stats.s -= 1;
-        document.getElementById('stat-s').innerText = stats.s;
+        if(!inp.value || myStats.s <= 0) return;
+        myStats.s -= 1;
+        document.getElementById('stat-s').innerText = myStats.s;
         playSnd('click');
 
         const data = { 
@@ -214,30 +255,28 @@
             h: new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}),
             exp: Date.now() + 1800000 
         };
-        ch.send({type:'broadcast', event:'m', payload: data});
+        liveChan.send({type:'broadcast', event:'m', payload: data});
         save(data, 'sent');
         inp.value = "";
     }
 
     function save(msg, type) {
-        let h = JSON.parse(localStorage.getItem('ch_v11_'+myId) || '[]');
+        let h = JSON.parse(localStorage.getItem('ch_v13_'+myId) || '[]');
         msg.type = type;
         h.push(msg);
-        localStorage.setItem('ch_v11_'+myId, JSON.stringify(h));
-        render(true); // Solo actualizamos la lista cuando hay mensaje nuevo
+        localStorage.setItem('ch_v13_'+myId, JSON.stringify(h));
+        render(true);
     }
 
     function render(full = false) {
         const flow = document.getElementById('chat-flow');
-        let h = JSON.parse(localStorage.getItem('ch_v11_'+myId) || '[]');
+        let h = JSON.parse(localStorage.getItem('ch_v13_'+myId) || '[]');
         const now = Date.now();
-
         if(full) {
             flow.innerHTML = "";
             h.filter(m => (m.from === targetId || m.to === targetId) && m.exp > now).forEach(m => {
-                const timeLeft = Math.round((m.exp - now) / 1000);
                 flow.innerHTML += `
-                    <div class="bubble ${m.type}" id="msg-${m.exp}">
+                    <div class="bubble ${m.type}">
                         ${m.text}
                         <div class="msg-meta">
                             <span>${m.h}</span>
@@ -247,23 +286,16 @@
             });
             flow.scrollTop = flow.scrollHeight;
         }
-        updateCountdowns();
+        updateTime();
     }
 
-    function updateCountdowns() {
+    function updateTime() {
         const now = Date.now();
         document.querySelectorAll('.countdown').forEach(el => {
             const exp = parseInt(el.getAttribute('data-exp'));
             const diff = Math.max(0, Math.round((exp - now) / 1000));
             el.innerText = `${Math.floor(diff/60)}:${(diff%60).toString().padStart(2,'0')}`;
-            if(diff <= 0) el.closest('.bubble').style.display = 'none';
         });
-    }
-
-    function showPush(u, t) {
-        if (Notification.permission === "granted" && document.hidden) {
-            new Notification(`Cyber-Link: ${u}`, { body: t });
-        }
     }
 
     function toggleGifts() {
@@ -274,15 +306,13 @@
 
     function sendGift(n) {
         const data = { from: myId, to: targetId, text: "🎁 Regaló: "+n, h: new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}), exp: Date.now() + 1800000 };
-        ch.send({type:'broadcast', event:'m', payload: data});
+        liveChan.send({type:'broadcast', event:'m', payload: data});
         save(data, 'sent');
         toggleGifts();
     }
 
     function closeChat() { document.getElementById('chat-view').style.display = 'none'; }
-    
-    // El intervalo ahora solo actualiza los números de tiempo, NO todo el HTML del chat
-    setInterval(updateCountdowns, 1000);
+    setInterval(updateTime, 1000);
 </script>
 </body>
 </html>
